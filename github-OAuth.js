@@ -1,9 +1,10 @@
 const express = require("express");
 const axios = require("axios");
-const open = require("open");
+const open = require('open');
+require('dotenv').config();  
 
-const CLIENT_ID = "your-client-id";
-const CLIENT_SECRET = "your-client-secret";
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = "http://localhost:4242/callback";
 
 function startAuthServer() {
@@ -34,6 +35,7 @@ function startAuthServer() {
         server.close(); 
         resolve(accessToken); 
       } catch (err) {
+        console.error("Error during authentication:", err);
         reject(err);
       }
     });
@@ -43,10 +45,16 @@ function startAuthServer() {
 async function OAuth() {
   const authURL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo`;
 
-  await open(authURL);
+  try {
+    console.log("Opening GitHub OAuth URL...");
+    await open(authURL);
+  } catch (err) {
+    console.error("Error opening browser:", err);
+    throw new Error("Failed to open browser for authentication");
+  }
 
   const token = await startAuthServer();
-  return token; 
+  return token;
 }
 
 module.exports = { OAuth };
