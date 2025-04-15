@@ -1,7 +1,6 @@
 const express = require("express");
 const axios = require("axios");
-const open = require("open");
-require("dotenv").config();  
+require("dotenv").config();
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -50,6 +49,7 @@ async function OAuth() {
 
   try {
     console.log("Opening GitHub OAuth URL...");
+    const open = (await import("open")).default;
     await open(authURL);
     console.log("Browser opened successfully.");
   } catch (err) {
@@ -60,4 +60,5 @@ async function OAuth() {
   const token = await startAuthServer();
   return token;
 }
+
 module.exports = { OAuth };
