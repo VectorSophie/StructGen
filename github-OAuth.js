@@ -1,7 +1,7 @@
 const express = require("express");
 const axios = require("axios");
-const open = require('open');
-require('dotenv').config();  
+const open = require("open");
+require("dotenv").config();  
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -15,8 +15,11 @@ function startAuthServer() {
     });
 
     app.get("/callback", async (req, res) => {
-      const code = req.query.code; 
-      if (!code) return res.status(400).send("Missing code");
+      const code = req.query.code;
+      if (!code) {
+        console.error("Missing code in callback");
+        return res.status(400).send("Missing code");
+      }
 
       try {
         const tokenRes = await axios.post(
@@ -25,15 +28,15 @@ function startAuthServer() {
             client_id: CLIENT_ID,
             client_secret: CLIENT_SECRET,
             code,
-            redirect_uri: REDIRECT_URI, 
+            redirect_uri: REDIRECT_URI,
           },
           { headers: { Accept: "application/json" } }
         );
 
-        const accessToken = tokenRes.data.access_token; 
-        res.send("Authentication complete. Thx!"); 
-        server.close(); 
-        resolve(accessToken); 
+        const accessToken = tokenRes.data.access_token;
+        res.send("Authentication complete. Thanks!");
+        server.close();
+        resolve(accessToken);
       } catch (err) {
         console.error("Error during authentication:", err);
         reject(err);
@@ -48,6 +51,7 @@ async function OAuth() {
   try {
     console.log("Opening GitHub OAuth URL...");
     await open(authURL);
+    console.log("Browser opened successfully.");
   } catch (err) {
     console.error("Error opening browser:", err);
     throw new Error("Failed to open browser for authentication");
@@ -56,6 +60,4 @@ async function OAuth() {
   const token = await startAuthServer();
   return token;
 }
-
 module.exports = { OAuth };
-
