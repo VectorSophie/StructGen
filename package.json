@@ -1,6 +1,6 @@
 {
   "name": "structgen-cli",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A tool to generate a folder with formatted files",
   "main": "index.js",
   "bin": {
