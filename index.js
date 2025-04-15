@@ -6,6 +6,7 @@ const axios = require("axios");
 const inquirer = require("inquirer");
 const open = require("open");
 const { execSync } = require("child_process");
+const {getGithubToken} = require("./getGithubToken")
 const { OAuth } = require("./github-OAuth");
 
 async function promptUser() {
@@ -95,7 +96,7 @@ async function generate() {
   }
 
   console.log(`Generated ${numFiles * subfolderNames.length} ${fileExtension} files across ${subfolderNames.length} subfolders in ${OUTPUT_DIR}`);
-  const githubToken = await OAuth();
+  const githubToken = await getGithubToken();
   const remoteUrl = await createGithub(githubToken, folderName);
   pushGitHub(OUTPUT_DIR, remoteUrl);
 }
