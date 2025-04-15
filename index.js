@@ -2,8 +2,10 @@
 
 const fs = require("fs-extra");
 const path = require("path");
-const { execSync } = require("child_process");
+const axios = require("axios");
 const inquirer = require("inquirer"); 
+const { execSync } = require("child_process");
+const { OAuth } = require("./github-OAuth");
 
 async function promptUser() {
   const answers = await inquirer.prompt([
@@ -34,6 +36,32 @@ async function promptUser() {
   ]);
   return answers;
 }
+
+async function createGithub(token, name) {
+  try {
+    const res = await axios.post(
+      "https://api.github.com/user/repos",
+      { name },
+      { headers: { Authorization: `token ${token}` } }
+    );
+    console.log(`GitHub repo "${res.data.full_name}" created!`);
+    return res.data.clone_url
+  } catch (err) {
+    console.error("GitHub repo creation failed:", err.response?.data?.message || err.message);
+  }
+}
+
+function pushGitHub(localPath, remoteUrl) {
+  try {
+    execSync(`git remote add origin ${remoteUrl}`, { cwd: localPath });
+    execSync(`git branch -M main`, { cwd: localPath });
+    execSync(`git push -u origin main`, { cwd: localPath, stdio: "inherit" });
+    console.log("🚀 Pushed to GitHub!");
+  } catch (err) {
+    console.error("❌ Failed to push to GitHub:", err.message);
+  }
+}
+
 
 async function generate() {
   const { folderName, fileExtension, numFiles, subfolders } = await promptUser();
@@ -66,6 +94,9 @@ async function generate() {
   }
 
   console.log(`Generated ${numFiles * subfolderNames.length} ${fileExtension} files across ${subfolderNames.length} subfolders in ${OUTPUT_DIR}`);
+  const githubToken = await OAuth();
+  const remoteUrl = await createGithub(githubToken, folderName);
+  pushGitHub(OUTPUT_DIR, remoteUrl);
 }
 
 generate();
