@@ -10,11 +10,11 @@ function startAuthServer() {
   return new Promise((resolve, reject) => {
     const app = express();
     const server = app.listen(4242, () => {
-      console.log("Readying http://localhost:4242 for GitHub OAuth...");
+      console.log("Ready for GitHub OAuth at http://localhost:4242...");
     });
 
     app.get("/callback", async (req, res) => {
-      const code = req.query.code;
+      const code = req.query.code; 
       if (!code) return res.status(400).send("Missing code");
 
       try {
@@ -24,15 +24,15 @@ function startAuthServer() {
             client_id: CLIENT_ID,
             client_secret: CLIENT_SECRET,
             code,
-            redirect_uri: REDIRECT_URI,
+            redirect_uri: REDIRECT_URI, 
           },
           { headers: { Accept: "application/json" } }
         );
 
-        const accessToken = tokenRes.data.access_token;
-        res.send("Authentication complete. Thx!");
-        server.close();
-        resolve(accessToken);
+        const accessToken = tokenRes.data.access_token; 
+        res.send("Authentication complete. Thx!"); 
+        server.close(); 
+        resolve(accessToken); 
       } catch (err) {
         reject(err);
       }
@@ -41,10 +41,13 @@ function startAuthServer() {
 }
 
 async function OAuth() {
-  const authURL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=repo`;
+  const authURL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo`;
+
   await open(authURL);
+
   const token = await startAuthServer();
-  return token;
+  return token; 
 }
 
 module.exports = { OAuth };
+

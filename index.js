@@ -3,7 +3,8 @@
 const fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
-const inquirer = require("inquirer"); 
+const inquirer = require("inquirer");
+const open = require("open");
 const { execSync } = require("child_process");
 const { OAuth } = require("./github-OAuth");
 
