@@ -57,9 +57,9 @@ function pushGitHub(localPath, remoteUrl) {
     execSync(`git remote add origin ${remoteUrl}`, { cwd: localPath });
     execSync(`git branch -M main`, { cwd: localPath });
     execSync(`git push -u origin main`, { cwd: localPath, stdio: "inherit" });
-    console.log("🚀 Pushed to GitHub!");
+    console.log("Pushed to GitHub!");
   } catch (err) {
-    console.error("❌ Failed to push to GitHub:", err.message);
+    console.error("Failed to push to GitHub:", err.message);
   }
 }
 
