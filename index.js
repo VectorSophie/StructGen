@@ -6,7 +6,6 @@ const axios = require("axios");
 const inquirer = require("inquirer");
 const open = require("open");
 const { execSync } = require("child_process");
-const {getGithubToken} = require("./getGithubToken")
 const { OAuth } = require("./github-OAuth");
 
 async function promptUser() {
@@ -47,9 +46,13 @@ async function createGithub(token, name) {
       { headers: { Authorization: `token ${token}` } }
     );
     console.log(`GitHub repo "${res.data.full_name}" created!`);
-    return res.data.clone_url
+    return res.data.clone_url;
   } catch (err) {
-    console.error("GitHub repo creation failed:", err.response?.data?.message || err.message);
+    if (err.response?.status === 422) {
+      console.error(`A repository with the name "${name}" already exists.`);
+    } else {
+      console.error("GitHub repo creation failed:", err.response?.data?.message || err.message);
+    }
   }
 }
 
@@ -63,7 +66,6 @@ function pushGitHub(localPath, remoteUrl) {
     console.error("Failed to push to GitHub:", err.message);
   }
 }
-
 
 async function generate() {
   const { folderName, fileExtension, numFiles, subfolders } = await promptUser();
@@ -96,9 +98,14 @@ async function generate() {
   }
 
   console.log(`Generated ${numFiles * subfolderNames.length} ${fileExtension} files across ${subfolderNames.length} subfolders in ${OUTPUT_DIR}`);
-  const githubToken = await getGithubToken();
-  const remoteUrl = await createGithub(githubToken, folderName);
-  pushGitHub(OUTPUT_DIR, remoteUrl);
+
+  try {
+    const token = await OAuth(); 
+    const remoteUrl = await createGithub(token, folderName);
+    pushGitHub(OUTPUT_DIR, remoteUrl);
+  } catch (err) {
+    console.error("Authentication or GitHub repo creation failed:", err.message);
+  }
 }
 
 generate();
