@@ -1,13 +1,18 @@
 const express = require("express");
 const path = require("path");
 const axios = require("axios");
+const crypto = require("crypto");
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = "http://localhost:4242/callback";
 
-function startAuthServer() {
+function generateState() {
+  return crypto.randomUUID();
+}
+
+function startAuthServer(state) {
   return new Promise((resolve, reject) => {
     const app = express();
     const server = app.listen(4242, () => {
@@ -15,10 +20,16 @@ function startAuthServer() {
     });
 
     app.get("/callback", async (req, res) => {
-      const code = req.query.code;
+      const { code, state: returnedState } = req.query;
+
       if (!code) {
         console.error("Missing code in callback");
         return res.status(400).send("Missing code");
+      }
+
+      if (returnedState !== state) {
+        console.error("State mismatch!");
+        return res.status(400).send("State mismatch");
       }
 
       try {
@@ -46,7 +57,8 @@ function startAuthServer() {
 }
 
 async function OAuth() {
-  const authURL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo`;
+  const state = generateState();
+  const authURL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo&state=${state}`;
 
   try {
     console.log("Opening GitHub OAuth URL...");
@@ -58,7 +70,7 @@ async function OAuth() {
     throw new Error("Failed to open browser for authentication");
   }
 
-  const token = await startAuthServer();
+  const token = await startAuthServer(state);
   return token;
 }
 
