@@ -15,7 +15,7 @@ async function promptUser() {
       type: "input",
       name: "folderName",
       message: "Enter the folder name:",
-      default: "generated_files", 
+      default: "test", 
     },
     {
       type: "input",
@@ -27,13 +27,13 @@ async function promptUser() {
       type: "number",
       name: "numFiles",
       message: "How many files do you want to generate in each subfolder?",
-      default: 10,
+      default: 1,
     },
     {
       type: "input",
       name: "subfolders",
       message: "Enter subfolder names (comma separated):",
-      default: "subfolder1,subfolder2,subfolder3",
+      default: "test1,test2,test3",
     },
   ]);
   return answers;
