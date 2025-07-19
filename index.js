@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+require("dotenv").config();
 const fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
@@ -38,19 +38,30 @@ async function promptUser() {
   return answers;
 }
 
-async function createGithub(token, name) {
+async function createGithubRepo(token, name) {
   try {
     const res = await axios.post(
       "https://api.github.com/user/repos",
       { name },
-      { headers: { Authorization: `token ${token}` } }
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github+json",
+        },
+      }
     );
-    console.log(`GitHub repo "${res.data.full_name}" created!`);
-    return res.data.clone_url
+    console.log(`GitHub repo created: ${res.data.full_name}`);
+    return res.data.clone_url;
   } catch (err) {
-    console.error("GitHub repo creation failed:", err.response?.data?.message || err.message);
+    if (err.response?.status === 422) {
+      console.error(`A repository named "${name}" already exists.`);
+    } else {
+      console.error("Failed to create repo:", err.response?.data || err.message);
+    }
+    throw err;
   }
 }
+
 
 function pushGitHub(localPath, remoteUrl) {
   try {
@@ -95,8 +106,12 @@ async function generate() {
   }
 
   console.log(`Generated ${numFiles * subfolderNames.length} ${fileExtension} files across ${subfolderNames.length} subfolders in ${OUTPUT_DIR}`);
-  const githubToken = await OAuth();
-  const remoteUrl = await createGithub(githubToken, folderName);
+  const githubToken = process.env.GH_TOKEN || await OAuth(); 
+  if (!githubToken) {
+    console.error("❌ GitHub token is missing.");
+    process.exit(1);
+  }
+  const remoteUrl = await createGithubRepo(githubToken, folderName);
   pushGitHub(OUTPUT_DIR, remoteUrl);
 }
 
